@@ -16,7 +16,7 @@ def genSine1D(f0, fs, dur):
 def genSine2D(f0, fs, dur):
     """ Generate 1D sine signal"""
     t = dur
-    x = np.linspace(0,2*np.pi*t*(f0/fs))
+    x = np.linspace(0,2*np.pi*t*(f0/fs),num=dur)
     y = x
     X,Y = np.meshgrid(x,y)
     sinusoid = np.sin(X)*np.cos(Y)
@@ -45,7 +45,7 @@ def normalise(x):
 
 def generateSignal1D():
     f0 = 1.0
-    fs = 50
+    fs = 100
     dur = 1*fs                      #seconds
     sinusoid = genSine1D(f0,fs,dur)
     noise = genNoise1D(dur)
@@ -55,7 +55,7 @@ def generateSignal1D():
 
 def generateSignal2D():
     f0 = 1.0
-    fs = 50
+    fs = 70
     dur = 1*fs                      #seconds
     sinusoid = genSine2D(f0,fs,dur)
     noise = genNoise2D(dur)
@@ -146,6 +146,12 @@ def filter2D(order,U):
         for j in range(U.shape[1]):
             U_bar[:,j] = U_bar[:,j] + filt_kernel_2(-1.0,U[:,j])
 
+    if order == 8:
+        for i in range(U.shape[0]):
+            U_bar[i,:] = filt_kernel_8(-1.0,U[i,:])
+        for j in range(U.shape[1]):
+            U_bar[:,j] = U_bar[:,j] + filt_kernel_8(-1.0,U[:,j])
+
     if order == 10:
         for i in range(U.shape[0]):
             U_bar[i,:] = filt_kernel_10(-1.0,U[i,:])
@@ -159,32 +165,47 @@ def filter2D(order,U):
 if __name__ == '__main__':
     # one dimensional filter
     U = generateSignal1D()
+    print '{:>19} {:f} {:f}'.format('unfiltered min/max:',np.min(U),np.max(U))
     plt.close('all')
     plt.plot(U,'b')
     # second order
     U_bar = filt_kernel_2(-1.0,U)
-    plt.plot(U_bar,'g')
+    plt.plot(U_bar,'g',label='2nd')
+    print '{:>19} {:f} {:f}'.format('2nd min/max:',np.min(U_bar),np.max(U_bar))
     # third order
     U_bar = filt_kernel_4(-1.0,U)
-    plt.plot(U_bar,'r')
+    plt.plot(U_bar,'r',label='4th')
+    print '{:>19} {:f} {:f}'.format('4th min/max:',np.min(U_bar),np.max(U_bar))
     # eighth order
-    #U_bar = filt_kernel_8(-1.0,U)
-    #plt.plot(U_bar,'b')
+    U_bar = filt_kernel_8(-1.0,U)
+    plt.plot(U_bar,'m',label='8th')
+    print '{:>19} {:f} {:f}'.format('8th min/max:',np.min(U_bar),np.max(U_bar))
     # tenth order
     U_bar = filt_kernel_10(-1.0,U)
-    plt.plot(U_bar,'k')
+    plt.plot(U_bar,'k',label='10th')
+    print '{:>19} {:f} {:f}'.format('10th min/max:',np.min(U_bar),np.max(U_bar))
 
+    plt.legend()
 
+    print '2D dimensional case'
     plt.figure()
     U2D = generateSignal2D()
+    print '{:>19} {:f} {:f}'.format('unfiltered min/max:',np.min(U2D),np.max(U2D))
     plt.imshow(U2D)
 
     plt.figure()
     U2D_bar = filter2D(2,U2D)
+    print '{:>19} {:f} {:f}'.format('2nd min/max:',np.min(U2D_bar),np.max(U2D_bar))
+    plt.imshow(U2D_bar)
+
+    plt.figure()
+    U2D_bar = filter2D(8,U2D)
+    print '{:>19} {:f} {:f}'.format('8th min/max:',np.min(U2D_bar),np.max(U2D_bar))
     plt.imshow(U2D_bar)
 
     plt.figure()
     U2D_bar = filter2D(10,U2D)
+    print '{:>19} {:f} {:f}'.format('10th min/max:',np.min(U2D_bar),np.max(U2D_bar))
     plt.imshow(U2D_bar)
 
     plt.show()
