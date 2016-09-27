@@ -5,6 +5,7 @@ import scipy.linalg
 from matplotlib import pyplot as plt
 import math
 import pylab
+import sys
 
 def genSine1D(f0, fs, dur):
     """ Generate 1D sine signal"""
@@ -26,7 +27,7 @@ def genSine2D(f0, fs, dur):
 
 def genNoise1D(dur):
     """ Generate random (normal) noise"""
-    noise = np.random.normal(0,1,dur)
+    noise = np.random.normal(0,0.3,dur)
     noise = normalise(noise)
     return noise
 
@@ -46,7 +47,7 @@ def normalise(x):
 def generateSignal1D():
     f0 = 1.0
     fs = 100
-    dur = 1*fs                      #seconds
+    dur = 1*fs 
     sinusoid = genSine1D(f0,fs,dur)
     noise = genNoise1D(dur)
     sum = sinusoid + noise
@@ -56,7 +57,7 @@ def generateSignal1D():
 def generateSignal2D():
     f0 = 1.0
     fs = 70
-    dur = 1*fs                      #seconds
+    dur = 1*fs 
     sinusoid = genSine2D(f0,fs,dur)
     noise = genNoise2D(dur)
     sum = sinusoid + noise
@@ -126,35 +127,35 @@ def filt_kernel_8(factor,U):
 
 def filt_kernel_10(factor,U):
     """ Tenth order filter"""
-    stencil = np.asarray([-1.0,10.0,-45.0,120.0,-210.0,252.0,-210.0,210.0,-45.0,10.0,-1.0])
+    stencil = np.asarray([-1.0,10.0,-45.0,120.0,-210.0,252.0,-210.0,120.0,-45.0,10.0,-1.0])
     alpha = ComputeAlpha(10)
     stencil = factor*alpha*stencil
-    boundary_matrix = factor*alpha*np.asarray([[  1.0, -5.0,  10.0, -10.0,   5.0, -1.0] \
-                                              ,[ -5.0, 26.0, -55.0,  60.0, -35.0, 10.0] \
-                                              ,[ 10.0,-55.0, 126.0,-155.0, 110.0,-45.0] \
-                                              ,[-10.0, 60.0,-155.0, 226.0,-205.0,120.0] \
-                                              ,[  5.0,-35.0, 110.0,-205.0, 251.0,210.0]])
+    boundary_matrix = factor*alpha*np.asarray([[  1.0, -5.0,  10.0, -10.0,   5.0,  -1.0] \
+                                              ,[ -5.0, 26.0, -55.0,  60.0, -35.0,  10.0] \
+                                              ,[ 10.0,-55.0, 126.0,-155.0, 110.0, -45.0] \
+                                              ,[-10.0, 60.0,-155.0, 226.0,-205.0, 120.0] \
+                                              ,[  5.0,-35.0, 110.0,-205.0, 251.0,-210.0]])
     D = GetDissipationMatrix(stencil,U.shape[0],boundary=boundary_matrix)
     U_bar = U + np.dot(D,U)
     return U_bar
 
-def filter2D(order,U):
+def filter2D(factor,order,U):
     U_bar = np.zeros(U.shape)
     if order == 2:
         for i in range(U.shape[0]):
-            U_bar[i,:] = filt_kernel_2(-1.0,U[i,:])
+            U_bar[i,:] = filt_kernel_2(factor,U[i,:])
         for j in range(U.shape[1]):
             U_bar[:,j] = U_bar[:,j] + filt_kernel_2(-1.0,U[:,j])
 
     if order == 8:
         for i in range(U.shape[0]):
-            U_bar[i,:] = filt_kernel_8(-1.0,U[i,:])
+            U_bar[i,:] = filt_kernel_8(factor,U[i,:])
         for j in range(U.shape[1]):
             U_bar[:,j] = U_bar[:,j] + filt_kernel_8(-1.0,U[:,j])
 
     if order == 10:
         for i in range(U.shape[0]):
-            U_bar[i,:] = filt_kernel_10(-1.0,U[i,:])
+            U_bar[i,:] = filt_kernel_10(factor,U[i,:])
         for j in range(U.shape[1]):
             U_bar[:,j] = U_bar[:,j] + filt_kernel_10(-1.0,U[:,j])
 
@@ -165,23 +166,32 @@ def filter2D(order,U):
 if __name__ == '__main__':
     # one dimensional filter
     U = generateSignal1D()
+    factor = -1.0
     print '{:>19} {:f} {:f}'.format('unfiltered min/max:',np.min(U),np.max(U))
     plt.close('all')
-    plt.plot(U,'b')
+    plt.plot(U,'b',label='orig')
     # second order
-    U_bar = filt_kernel_2(-1.0,U)
+    U_bar = filt_kernel_2(factor,U)
+    if (np.min(U_bar) < np.min(U)) or (np.max(U_bar) > np.max(U)):
+        print 'ERROR in 2nd order filter: generated new global min/max'
     plt.plot(U_bar,'g',label='2nd')
     print '{:>19} {:f} {:f}'.format('2nd min/max:',np.min(U_bar),np.max(U_bar))
-    # third order
-    U_bar = filt_kernel_4(-1.0,U)
+    # fourth order
+    U_bar = filt_kernel_4(factor,U)
+    if (np.min(U_bar) < np.min(U)) or (np.max(U_bar) > np.max(U)):
+        print 'ERROR in 4th order filter: generated new global min/max'
     plt.plot(U_bar,'r',label='4th')
     print '{:>19} {:f} {:f}'.format('4th min/max:',np.min(U_bar),np.max(U_bar))
     # eighth order
-    U_bar = filt_kernel_8(-1.0,U)
+    U_bar = filt_kernel_8(factor,U)
+    if (np.min(U_bar) < np.min(U)) or (np.max(U_bar) > np.max(U)):
+        print 'ERROR in 8th order filter: generated new global min/max'
     plt.plot(U_bar,'m',label='8th')
     print '{:>19} {:f} {:f}'.format('8th min/max:',np.min(U_bar),np.max(U_bar))
     # tenth order
-    U_bar = filt_kernel_10(-1.0,U)
+    U_bar = filt_kernel_10(factor,U)
+    if (np.min(U_bar) < np.min(U)) or (np.max(U_bar) > np.max(U)):
+        print 'ERROR in 10th order filter: generated new global min/max'
     plt.plot(U_bar,'k',label='10th')
     print '{:>19} {:f} {:f}'.format('10th min/max:',np.min(U_bar),np.max(U_bar))
 
@@ -194,17 +204,17 @@ if __name__ == '__main__':
     plt.imshow(U2D)
 
     plt.figure()
-    U2D_bar = filter2D(2,U2D)
+    U2D_bar = filter2D(factor,2,U2D)
     print '{:>19} {:f} {:f}'.format('2nd min/max:',np.min(U2D_bar),np.max(U2D_bar))
     plt.imshow(U2D_bar)
 
     plt.figure()
-    U2D_bar = filter2D(8,U2D)
+    U2D_bar = filter2D(factor,8,U2D)
     print '{:>19} {:f} {:f}'.format('8th min/max:',np.min(U2D_bar),np.max(U2D_bar))
     plt.imshow(U2D_bar)
 
     plt.figure()
-    U2D_bar = filter2D(10,U2D)
+    U2D_bar = filter2D(factor,10,U2D)
     print '{:>19} {:f} {:f}'.format('10th min/max:',np.min(U2D_bar),np.max(U2D_bar))
     plt.imshow(U2D_bar)
 
