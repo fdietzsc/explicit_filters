@@ -5,4 +5,4 @@ This repository is ment as a testing framework to test explicit filtering techni
 
 and
 
-*1.Sagaut P, Grohens R. Discrete filters for large eddy simulation. international Journal for Numerical Methods in Fluids. 1999;31(8):1195-1220*
+*Sagaut P, Grohens R. Discrete filters for large eddy simulation. international Journal for Numerical Methods in Fluids. 1999;31(8):1195-1220*
