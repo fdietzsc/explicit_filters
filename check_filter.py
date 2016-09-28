@@ -33,7 +33,7 @@ def genNoise1D(dur):
 
 def genNoise2D(dur):
     """ Generate random (normal) noise"""
-    noise = np.random.normal(0,0.05,(dur,dur))
+    noise = np.random.normal(0,0.02,(dur,dur))
     noise = normalise(noise)
     return noise
 
@@ -135,6 +135,21 @@ def filt_kernel_10(factor,U):
                                               ,[ 10.0,-55.0, 126.0,-155.0, 110.0, -45.0] \
                                               ,[-10.0, 60.0,-155.0, 226.0,-205.0, 120.0] \
                                               ,[  5.0,-35.0, 110.0,-205.0, 251.0,-210.0]])
+    D = GetDissipationMatrix(stencil,U.shape[0],boundary=boundary_matrix)
+    U_bar = U + np.dot(D,U)
+    return U_bar
+
+def filt_kernel_12(factor,U):
+    """ Tenth order filter"""
+    stencil = np.asarray([-1.0,12.0,-66.0,220.0,-495.0,792.0,-924.0,792.0,-495.0,220.0,-66.0,12.0,-1.0])
+    alpha = ComputeAlpha(12)
+    stencil = factor*alpha*stencil
+    boundary_matrix = factor*alpha*np.asarray([[ -1.0,   6.0, -15.0,  20.0, -15.0,   6.0,  -1.0] \
+                                              ,[  6.0, -37.0,  96.0,-135.0, 110.0, -51.0,  12.0] \
+                                              ,[-15.0,  96.0,-262.0, 396.0,-360.0, 200.0, -66.0] \
+                                              ,[ 20.0,-135.0, 396.0,-662.0, 696.0,-480.0, 220.0] \
+                                              ,[-15.0, 110.0,-360.0, 696.0,-887.0, 786.0,-495.0] \
+                                              ,[  6.0, -51.0, 200.0,-480.0, 786.0,-923.0, 792.0]])
     D = GetDissipationMatrix(stencil,U.shape[0],boundary=boundary_matrix)
     U_bar = U + np.dot(D,U)
     return U_bar
